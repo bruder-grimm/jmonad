@@ -1,4 +1,4 @@
-package org.brudergrimm.jmonad.function;
+package org.brudergrimm.jmonad.tried.function;
 
 @FunctionalInterface
 public interface ThrowingSupplier<T> {

@@ -2,13 +2,12 @@ package org.brudergrimm.jmonad.tried;
 
 import org.brudergrimm.jmonad.either.Either;
 import org.brudergrimm.jmonad.either.Left;
-import org.brudergrimm.jmonad.function.ThrowingFunction;
+import org.brudergrimm.jmonad.tried.function.ThrowingFunction;
 import org.brudergrimm.jmonad.option.None;
 import org.brudergrimm.jmonad.option.Option;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class Failure<T> extends Try<T> {
     private final Throwable exception;
@@ -21,7 +20,6 @@ public class Failure<T> extends Try<T> {
         return new Failure<>(failure);
     }
 
-    @Override public boolean getException() { return true; }
     @Override public boolean isSuccess() { return false; }
 
     @Override public Try<T> onSuccess(Consumer<T> consumer) { return this; }
@@ -54,7 +52,12 @@ public class Failure<T> extends Try<T> {
     }
 
     @Override public T getOrElse(T other) { return other; }
-    @Override public Try<T> orElseTry(Supplier<T> fn) { return Try.apply(fn); }
+    @Override public Try<T> recover(Function<Throwable, T> fn) {
+        return Try.apply(exception, fn);
+    }
+    @Override public Try<T> recoverWith(Function<Throwable, Try<T>> fn) {
+        return fn.apply(exception);
+    }
 
     @Override public Option<T> toOption() { return None.apply(); }
     @Override public Either<Throwable, T> toEither() { return Left.apply(exception); }

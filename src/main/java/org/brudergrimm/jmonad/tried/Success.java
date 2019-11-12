@@ -2,12 +2,13 @@ package org.brudergrimm.jmonad.tried;
 
 import org.brudergrimm.jmonad.either.Either;
 import org.brudergrimm.jmonad.either.Right;
-import org.brudergrimm.jmonad.function.ThrowingFunction;
+import org.brudergrimm.jmonad.tried.function.ThrowingFunction;
 import org.brudergrimm.jmonad.option.Option;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
+
+import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedFunction;
 
 public class Success<T> extends Try<T> {
     private final T value;
@@ -20,7 +21,6 @@ public class Success<T> extends Try<T> {
         return new Success<>(value);
     }
 
-    @Override public boolean getException() { return false; }
     @Override public boolean isSuccess() { return true; }
 
     @Override public T get() { return this.value; }
@@ -36,17 +36,11 @@ public class Success<T> extends Try<T> {
         return Try.apply(this.get(), fn);
     }
 
-    @Override
-    public <R> Try<R> map(ThrowingFunction<T, R> fn) {
-        Function<T, R> f = (r) -> {
-            try { return fn.apply(r); } catch (Throwable e) { throw new RuntimeException(e); }
-        };
-
-        return map(f);
+    @Override public <R> Try<R> map(ThrowingFunction<T, R> fn) {
+        return map(asDeescelatedFunction(fn));
     }
 
-    @Override
-    public <R> Try<R> flatMap(Function<T, Try<R>> fn) {
+    @Override public <R> Try<R> flatMap(Function<T, Try<R>> fn) {
         try {
             return fn.apply(this.get());
         }
@@ -55,15 +49,12 @@ public class Success<T> extends Try<T> {
     }
 
     @Override public <R> Try<R> flatMap(ThrowingFunction<T, Try<R>> fn) {
-        Function<T, Try<R>> f = (r) -> {
-            try { return fn.apply(r); } catch (Throwable e) { throw new RuntimeException(e); }
-        };
-
-        return flatMap(f);
+        return flatMap(asDeescelatedFunction(fn));
     }
 
     @Override public T getOrElse(T other) { return this.get(); }
-    @Override public Try<T> orElseTry(Supplier<T> fn) { return this; }
+    @Override public Try<T> recover(Function<Throwable, T> fn) { return this; }
+    @Override public Try<T> recoverWith(Function<Throwable, Try<T>> fn) { return this; }
 
     @Override public Option<T> toOption() { return Option.apply(this.get()); }
     @Override public Either<Throwable, T> toEither() { return Right.apply(this.get()); }

@@ -1,16 +1,16 @@
 package org.brudergrimm.jmonad.tried;
 
-import org.brudergrimm.jmonad.function.ThrowingFunction;
-import org.brudergrimm.jmonad.option.Option;
 import org.brudergrimm.jmonad.either.Either;
-import org.brudergrimm.jmonad.either.Left;
-import org.brudergrimm.jmonad.either.Right;
-import org.brudergrimm.jmonad.function.ThrowingSupplier;
+import org.brudergrimm.jmonad.option.Option;
+import org.brudergrimm.jmonad.tried.function.*;
 
 import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedSupplier;
+import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedFunction;
 
 /**
  * Since it may not have become clear this boxes an operation that might fail
@@ -20,14 +20,19 @@ import java.util.function.Supplier;
  *
  *  @param <T> the boxed type the operation given to apply will return */
 abstract public class Try<T> implements Serializable {
-
+    /** Constructs a try from your supplier that has a throws in it's signature
+     *  @param r the supplier that might fail with an exception
+     *  @param <T> the return type of your supplier
+     *  @return A try that might either be an exception or the supplied value  */
     public static <T> Try<T> applyThrowing(ThrowingSupplier<T> r) {
-        Supplier<T> f = () -> { try { return r.get(); } catch (Throwable e) { throw new RuntimeException(e); } };
-        return Try.apply(f);
+        return Try.apply(asDeescelatedSupplier(r));
     }
 
-    public static <T> Try<T> apply(Supplier<T> r) {
-        Supplier<T> f = () -> { try { return r.get(); } catch (Throwable e) { throw new RuntimeException(e); } };
+    /** Constructs a try from a supplier
+     *  @param f the supplier that might fail with an exception
+     *  @param <T> the return type of your supplier
+     *  @return A try that might either be an exception or the supplied value */
+    public static <T> Try<T> apply(Supplier<T> f) {
         try {
             return Success.apply(f.get());
         }
@@ -36,12 +41,11 @@ abstract public class Try<T> implements Serializable {
     }
 
     static <U, T> Try<T> applyThrowing(U v1, ThrowingFunction<U, T> fn) {
-        return Try.applyThrowing(() -> fn.apply(v1)); }
-
+        return Try.apply(v1, asDeescelatedFunction(fn)); }
     static <U, T> Try<T> apply(U v1, Function<U, T> fn) {
-        return Try.apply(() -> fn.apply(v1)); }
+        return Try.apply(() -> fn.apply(v1));
+    }
 
-    public abstract boolean getException();
     public abstract boolean isSuccess();
 
     public static <T> Try<T> failed(Throwable e) { return Failure.apply(e); }
@@ -89,10 +93,19 @@ abstract public class Try<T> implements Serializable {
      *  @return state or other */
     public abstract T getOrElse(T other);
 
-    /** If this was a failure, call this supplier instead
+    /** Applies the given function if this is a Failure, otherwise returns this if this is a Success.
+     *  This is supposed to be like map for the exception, but there is no lower type bounds in java
+     *  like <U super T> that would enable us to have this return a Try<U>
      *  @param fn the fallback-callback
      *  @return this or the result of the callback */
-    public abstract Try<T> orElseTry(Supplier<T> fn);
+    public abstract Try<T> recover(Function<Throwable, T> fn);
+
+    /** Applies the given function if this is a Failure, otherwise returns this if this is a Success.
+     *  This is like flatMap for the exception.
+     *
+     *  @param fn the fallback-callback
+     *  @return this or the result of the callback */
+    public abstract Try<T> recoverWith(Function<Throwable, Try<T>> fn);
 
     /** @return an Option of this, empty if failure */
     public abstract Option<T> toOption();
