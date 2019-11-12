@@ -27,7 +27,7 @@ Try<Integer> possiblyRecovered = possiblyFiltered.recover(exception -> {
 ```
 
 Or, you can build a pipeline by chaining these sort of operations together:
-```
+```java
 Try<Integer> possibleResult = a
     .map(someInt -> someInt * 2)
     .filter(x -> x % 2 == 0)
@@ -37,7 +37,7 @@ Try<Integer> possibleResult = a
     });
 ```
 
-```
+```java
 Option<String> possibleResult = Try.applyThrowing(() -> getUserInput())
     .map(String::toUpperCase)
     .filter(allowedInput::contains)
@@ -49,8 +49,9 @@ Option<String> possibleResult = Try.applyThrowing(() -> getUserInput())
     .toOption();
 ```
 
-```
+```java
 Option<Repository> repository;
+
 public Either<Error, List<Integer>> getIds() {
     if (repository.isDefined()) {
         return Right.apply(repository.getAll());   
