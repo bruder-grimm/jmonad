@@ -3,7 +3,7 @@
 Gives you some nice monads for creating pipelines in java
 
 ## Where to start
-```
+```java
 Try<Integer> a = Try.applyThrowing(() -> hasDeclaredThrows());
 Try<Integer> b = Try.apply(() -> throwsSomethingUndeclared());
 
@@ -16,7 +16,7 @@ Either<String, Integer> integer = Right.apply(5);
 ## Where to go
 
 Obviously, you can go the java route and be like:
-```
+```java
 Try<Integer> possiblyDoubled = a.map(someInt -> someInt * 2);
 Try<Integer> possiblyFiltered = possiblyDoubled.filter(x -> x % 2 == 0);
 
