@@ -38,15 +38,10 @@ Try<Integer> possibleResult = a
 ```
 
 ```java
-Option<String> possibleResult = Try.applyThrowing(() -> getUserInput())
+String possibleResult = Option.apply(getUserInput())
     .map(String::toUpperCase)
     .filter(allowedInput::contains)
-    .recoverWith(exception -> {
-        Logger.log(exception.getMessage());
-        printer.print("Invalid input, please try again");
-        return Try.applyThrowing(() -> getUserInput());
-    })
-    .toOption();
+    .getOrElse("defaultInput");
 ```
 
 ```java
