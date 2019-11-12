@@ -2,13 +2,12 @@ package org.brudergrimm.jmonad.tried;
 
 import org.brudergrimm.jmonad.either.Either;
 import org.brudergrimm.jmonad.either.Right;
-import org.brudergrimm.jmonad.tried.function.ThrowingFunction;
 import org.brudergrimm.jmonad.option.Option;
 
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedFunction;
+import java.util.function.Predicate;
 
 public class Success<T> extends Try<T> {
     private final T value;
@@ -36,10 +35,6 @@ public class Success<T> extends Try<T> {
         return Try.apply(this.get(), fn);
     }
 
-    @Override public <R> Try<R> map(ThrowingFunction<T, R> fn) {
-        return map(asDeescelatedFunction(fn));
-    }
-
     @Override public <R> Try<R> flatMap(Function<T, Try<R>> fn) {
         try {
             return fn.apply(this.get());
@@ -48,8 +43,8 @@ public class Success<T> extends Try<T> {
         catch (Exception nonFatal) { return new Failure<>(nonFatal); }
     }
 
-    @Override public <R> Try<R> flatMap(ThrowingFunction<T, Try<R>> fn) {
-        return flatMap(asDeescelatedFunction(fn));
+    @Override public Try<T> filter(Predicate<T> condition) {
+        return condition.test(value) ? this : Failure.apply(new NoSuchElementException("Predicate does not hold for " + value));
     }
 
     @Override public T getOrElse(T other) { return this.get(); }

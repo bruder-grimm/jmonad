@@ -34,7 +34,7 @@ public abstract class Option<T> implements Serializable {
      *  @param <R> output type of function
      *  @return Option of the result of f() */
     public <R> Option<R> map(Function<T, R> f) {
-        return isEmpty() ? none : Some.apply(f.apply(this.get()));
+        return isEmpty() ? none : Option.apply(f.apply(this.get()));
     }
 
     /** This will take a function that returns another option and return just an option instead of an option[option]

@@ -2,12 +2,12 @@ package org.brudergrimm.jmonad.tried;
 
 import org.brudergrimm.jmonad.either.Either;
 import org.brudergrimm.jmonad.either.Left;
-import org.brudergrimm.jmonad.tried.function.ThrowingFunction;
 import org.brudergrimm.jmonad.option.None;
 import org.brudergrimm.jmonad.option.Option;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Failure<T> extends Try<T> {
     private final Throwable exception;
@@ -35,21 +35,13 @@ public class Failure<T> extends Try<T> {
         Try<R> res = (Try<R>) this;
         return res;
     }
-    @Override public <R> Try<R> map(ThrowingFunction<T, R> fn) {
-        @SuppressWarnings("unchecked")
-        Try<R> res = (Try<R>) this;
-        return res;
-    }
     @Override public <R> Try<R> flatMap(Function<T, Try<R>> fn) {
         @SuppressWarnings("unchecked")
         Try<R> res = (Try<R>) this;
         return res;
     }
-    @Override public <R> Try<R> flatMap(ThrowingFunction<T, Try<R>> fn) {
-        @SuppressWarnings("unchecked")
-        Try<R> res = (Try<R>) this;
-        return res;
-    }
+
+    @Override public Try<T> filter(Predicate<T> condition) { return this; }
 
     @Override public T getOrElse(T other) { return other; }
     @Override public Try<T> recover(Function<Throwable, T> fn) {

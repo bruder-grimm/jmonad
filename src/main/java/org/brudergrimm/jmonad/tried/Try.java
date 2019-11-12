@@ -7,16 +7,16 @@ import org.brudergrimm.jmonad.tried.function.*;
 import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedSupplier;
 import static org.brudergrimm.jmonad.tried.Deescelator.asDeescelatedFunction;
 
-/**
- * Since it may not have become clear this boxes an operation that might fail
- * and forces the callee to deal with the failure, may it have occured. The
- * Idea is that you can map a function to the value of the monad and only before
- * having to unbox check if something went wrong, deescalating errors substantially
+/** Since it may not have become clear this boxes an operation that might fail
+ *  and forces the callee to deal with the failure, may it have occured. The
+ *  Idea is that you can map a function to the value of the monad and only before
+ *  having to unbox check if something went wrong, deescalating errors substantially
  *
  *  @param <T> the boxed type the operation given to apply will return */
 abstract public class Try<T> implements Serializable {
@@ -70,23 +70,17 @@ abstract public class Try<T> implements Serializable {
      *  @param <R> return type
      *  @return the mapped try */
     public abstract <R> Try<R> map(Function<T, R> fn);
-    /** maps a function to the state value, but the function has a throws in it's signature
-     *  @param fn the function to apply to the boxed value, must return R
-     *  @param <R> return type
-     *  @return the mapped try */
-    public abstract <R> Try<R> map(ThrowingFunction<T, R> fn);
 
     /** This will take a function that returns another try and return just an try instead of an try[try]
      *  @param fn the function to apply to the boxed value, must return Try of R
      *  @param <R> return type
      *  @return the mapped try */
     public abstract <R> Try<R> flatMap(Function<T, Try<R>> fn);
-    /** Same as flatmap, but the function has a throws in it's signature
-     *  This will take a function that returns another try and return just an try instead of an try[try]
-     *  @param fn the function to apply to the boxed value, must return Try of R
-     *  @param <R> return type
-     *  @return the mapped try */
-    public abstract <R> Try<R> flatMap(ThrowingFunction<T, Try<R>> fn);
+
+    /** Converts this to a Failure if the predicate is not satisfied.
+     * @param condition predicate
+     * @return the try */
+    public abstract Try<T> filter(Predicate<T> condition);
 
     /** If this was a failure, return other instead
      *  @param other the fallback
