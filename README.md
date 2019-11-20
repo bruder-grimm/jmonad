@@ -8,6 +8,8 @@ Try<Integer> a = Try.applyThrowing(() -> hasDeclaredThrows());
 Try<Integer> b = Try.apply(() -> throwsSomethingUndeclared());
 
 Option<String> c = Option.apply(couldBeNull());
+Option<String> d = Some.apply("This does exist");
+Option<String> e = None.apply();
 
 Either<String, Integer> string = Left.apply("hello");
 Either<String, Integer> integer = Right.apply(5);
