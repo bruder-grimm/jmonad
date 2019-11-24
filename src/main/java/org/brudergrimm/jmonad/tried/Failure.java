@@ -30,6 +30,8 @@ public class Failure<T> extends Try<T> {
 
     @Override public T get() { throw new RuntimeException(exception); }
 
+    @Override public Try<Throwable> failed() { return Success.apply(exception); }
+
     @Override public <R> Try<R> map(Function<T, R> fn) {
         @SuppressWarnings("unchecked")
         Try<R> res = (Try<R>) this;

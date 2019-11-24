@@ -24,6 +24,10 @@ public class Success<T> extends Try<T> {
 
     @Override public T get() { return this.value; }
 
+    @Override public Try<Throwable> failed() {
+        return Failure.apply(new UnsupportedOperationException("Can't convert success to failure"));
+    }
+
     @Override public Try<T> onSuccess(Consumer<T> consumer) {
         consumer.accept(this.get());
         return this;

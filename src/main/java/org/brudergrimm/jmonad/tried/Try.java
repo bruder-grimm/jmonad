@@ -65,6 +65,11 @@ abstract public class Try<T> implements Serializable {
      *  @return getBy the underling value */
     public abstract T get();
 
+    /** practically invertes the result to Success(failure) or Failure(Uns
+     *
+     * @return */
+    public abstract Try<Throwable> failed();
+
     /** maps a function to the state value
      *  @param fn the function to apply to the boxed value, must return R
      *  @param <R> return type
