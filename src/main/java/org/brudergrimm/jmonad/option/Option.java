@@ -62,7 +62,7 @@ public abstract class Option<T> implements Serializable {
 
 
     public Option<T> filter(Predicate<T> condition) {
-        return (isEmpty() || condition.test(this.get())) ? this : none;
+        return (!isEmpty() && condition.test(this.get())) ? this : none;
     }
 
     /* Bridges the gap between implementations with Javas Optional */

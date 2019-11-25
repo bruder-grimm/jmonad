@@ -55,6 +55,14 @@ class OptionTest {
         assertFalse(filteredEmpty.isDefined());
     }
 
+    @Test void testFilter2() {
+        Option<Integer> integer = Some.apply(2);
+        Option<Integer> filtered = integer.filter(content -> content.equals(2));
+
+        assertTrue(filtered.isDefined());
+        assertEquals(2, filtered.get());
+    }
+
     @Test void testGetOrElse() {
         Option<String> nil = Option.apply(testClass.returnsNull());
         String notNull1 = nil.getOrElse("a");
