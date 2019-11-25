@@ -6,7 +6,7 @@
 
     <groupId>org.brudergrimm</groupId>
     <artifactId>jmonad</artifactId>
-    <version>1.0</version>
+    <version>1.1.2</version>
 
     <build>
         <finalName>${groupId}.${artifactId}-${project.version}</finalName>
