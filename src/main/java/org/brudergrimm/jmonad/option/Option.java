@@ -47,19 +47,20 @@ public abstract class Option<T> implements Serializable {
 
     /** @return I need not mention to use this with care */
     public T orNull() { return getOrElse(null); }
+    
     /** If the state value is null, this will be returned instead
      *  @param other the fallback
      *  @return state or other */
     public T getOrElse(T other) {
         return isEmpty() ? other : this.get();
     }
+
     /** If the state value is null, this supplier will be called instead
      *  @param other the fallback-callback
      *  @return state or the result of the callback */
     public T orElseGet(Supplier<T> other) {
-        return isEmpty() ? this.get() : other.get();
+        return isEmpty() ? other.get() : this.get();
     }
-
 
     public Option<T> filter(Predicate<T> condition) {
         return (!isEmpty() && condition.test(this.get())) ? this : none;
