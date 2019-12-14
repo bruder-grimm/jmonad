@@ -47,7 +47,7 @@ public abstract class Option<T> implements Serializable {
 
     /** @return I need not mention to use this with care */
     public T orNull() { return getOrElse(null); }
-    
+
     /** If the state value is null, this will be returned instead
      *  @param other the fallback
      *  @return state or other */
