@@ -106,6 +106,14 @@ abstract public class Try<T> implements Serializable {
      *  @return this or the result of the callback */
     public abstract Try<T> recoverWith(Function<Throwable, Try<T>> fn);
 
+    /** I have not found out how to supply evidence to this so use with caution
+     * @return the inner try */
+    public <U> Try<U> flatten() {
+        if (this.isSuccess() && this.get() instanceof Try) {
+            return (Try<U>) this.get();
+        } else return (Try<U>) this;
+    }
+
     /** @return an Option of this, empty if failure */
     public abstract Option<T> toOption();
 

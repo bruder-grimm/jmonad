@@ -1,5 +1,7 @@
 package org.brudergrimm.jmonad.option;
 
+import org.brudergrimm.jmonad.tried.Try;
+
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -43,6 +45,15 @@ public abstract class Option<T> implements Serializable {
      *  @return Option of the result of f() */
     public <R> Option<R> flatMap(Function<T, Option<R>> f) {
         return isEmpty() ? none : f.apply(this.get()); // see @map
+    }
+
+    /** Flattens
+     * @param <U>
+     * @return flattend */
+    public <U> Option<U> flatten() {
+        if (this.isDefined() && this.get() instanceof Option) {
+            return (Option<U>) this.get();
+        } else return none;
     }
 
     /** @return I need not mention to use this with care */
