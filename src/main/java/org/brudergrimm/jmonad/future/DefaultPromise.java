@@ -32,7 +32,7 @@ public class DefaultPromise<T> extends Future<T> {
 
     @Override public <R> Future<R> map(Function<T, R> f) {
         if (this.task.isSuccess()) {
-            return fromJavaFuture(this.task.get().thenApply(f));
+            return fromJavaFuture(this.task.get().thenApplyAsync(f));
         }
         return Failed.apply(this.task.failed().get());
     }
