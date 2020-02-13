@@ -83,9 +83,8 @@ public class SequencePromise<T> extends Future<List<T>> {
     }
 
     @Override public Future<List<T>> onFailure(Consumer<Throwable> t) {
-        this.indicator.map(future -> future.handle((i, throwable) -> {
-            t.accept(throwable);
-            return i;
+        this.indicator.map(future -> future.whenCompleteAsync((i, throwable) -> {
+            if (throwable != null) t.accept(throwable);
         }));
         return this;
     }
