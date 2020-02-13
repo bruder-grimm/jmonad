@@ -4,13 +4,16 @@ Gives you some nice monads for creating pipelines in java
 
 ## Where to start
 ```java
+// Create variables of which the creation process might fail
 Try<Integer> a = Try.applyThrowing(() -> hasDeclaredThrows());
 Try<Integer> b = Try.apply(() -> throwsSomethingUndeclared());
 
+// Create values which might or might not be present
 Option<String> c = Option.apply(couldBeNull());
 Option<String> d = Some.apply("This does exist");
 Option<String> e = None.apply();
 
+// Create a disjunct set to model either/or situations
 Either<String, Integer> string = Left.apply("hello");
 Either<String, Integer> integer = Right.apply(5);
 ```
@@ -48,7 +51,8 @@ String possibleResult = Option.apply(getUserInput())
 
 ```java
 Option<Repository> repository;
-
+/** By creating a function that returns a monad you force the callee to handle either situation
+  * No more nullpointers, no more try catch blocks, no more java frustrations */
 public Either<Error, List<Integer>> getIds() {
     if (repository.isDefined()) {
         return Right.apply(repository.getAll());   
@@ -57,6 +61,7 @@ public Either<Error, List<Integer>> getIds() {
 }
 
 public void printIds() {
+    // defining fallbacks, map over possible values, in the most concise way possible
     String output = getIds().fold(
         error -> {
             errorHandler.handleError(error);
