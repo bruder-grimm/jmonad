@@ -72,5 +72,22 @@ public void printIds() {
 }
 ```
 
+You can now also create Futures to deferr evaluation of suppliers to other threads.
+Scheduling is taken care of, use them just like the other monads.
+```java
+Future<Integer> eventual = Future.apply(() -> someExpensiveCalculation());
+    .map(someInt -> someInt * 2)
+    .flatMap(x -> someOtherExpensiveCalculation(x));
+```
+
+Futures still need 
+- onComplete or foreach
+- await
+- filter
+- fold
+- recover
+- recoverWith
+
+
 ## What to do
-It's basically just like `Try`, `Option` and `Either` in Scala, so just look for some Documentation on those.
+It's basically just like `Try`, `Option`, `Future`, and `Either` in Scala, so just look for some Documentation on those.
