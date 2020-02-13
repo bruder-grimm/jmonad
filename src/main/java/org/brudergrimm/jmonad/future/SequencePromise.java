@@ -6,9 +6,13 @@ import org.brudergrimm.jmonad.tried.Failure;
 import org.brudergrimm.jmonad.tried.Success;
 import org.brudergrimm.jmonad.tried.Try;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SequencePromise<T> extends Future<List<T>> {
@@ -65,8 +69,33 @@ public class SequencePromise<T> extends Future<List<T>> {
         );
     }
 
+    @Override public Try<List<T>> await(Duration atMost) {
+        return this.indicator
+                .flatMap(f ->
+                        Try.applyThrowing(() -> f.get(atMost.toMillis(), TimeUnit.MILLISECONDS))
+                )
+                .map(i -> results());
+    }
+
+    @Override public Future<List<T>> onSuccess(Consumer<List<T>> t) {
+        this.indicator.map(future -> future.thenRunAsync(() -> t.accept(this.results())));
+        return this;
+    }
+
+    @Override public Future<List<T>> onFailure(Consumer<Throwable> t) {
+        this.indicator.map(future -> future.handle((i, throwable) -> {
+            t.accept(throwable);
+            return i;
+        }));
+        return this;
+    }
+
     @Override public boolean isCompleted() {
         return indicator.map(CompletableFuture::isDone).getOrElse(true);
+    }
+
+    @Override public Future<List<T>> filter(Predicate<List<T>> predicate) {
+        return null;
     }
 
     @Override public Future<Throwable> failed() {

@@ -3,9 +3,12 @@ package org.brudergrimm.jmonad.future;
 import org.brudergrimm.jmonad.option.Option;
 import org.brudergrimm.jmonad.tried.Try;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.util.function.Function.identity;
@@ -49,7 +52,27 @@ public abstract class Future<T> {
      *  @return Some or None if the future was completed, Failure or Success of the value */
     public abstract Option<Try<T>> value();
 
+    /** Wait for up to the specified duration and return the future as a try
+     *  @param atMost how long to wait at most
+     *  @return a try of the eventual value */
+    public abstract Try<T> await(Duration atMost);
+
+    /** Add callback to successful value
+     *  @param t the callback
+     *  @return the tapped future */
+    public abstract Future<T> onSuccess(Consumer<T> t);
+
+    /** Add callback to throwable
+     *  @param t the callback
+     *  @return the tapped future */
+    public abstract Future<T> onFailure(Consumer<Throwable> t);
+
     public abstract boolean isCompleted();
+
+    /** Apply a filter asynchronously
+     *  @param predicate the filter
+     *  @return the tapped future */
+    public abstract Future<T> filter(Predicate<T> predicate);
 
     /** Turns a Future[Future[T]] into a Future[T]
      *  @param <Evidence> type of the inner future

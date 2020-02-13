@@ -5,8 +5,11 @@ import org.brudergrimm.jmonad.option.Some;
 import org.brudergrimm.jmonad.tried.Failure;
 import org.brudergrimm.jmonad.tried.Try;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Failed<T> extends Future<T> {
     private final Throwable exception;
@@ -39,8 +42,25 @@ public class Failed<T> extends Future<T> {
         return Some.apply(Failure.apply(this.exception));
     }
 
+    @Override public Try<T> await(Duration atMost) {
+        return Failure.apply(this.exception);
+    }
+
+    @Override public Future<T> onSuccess(Consumer<T> t) {
+        return this;
+    }
+
+    @Override public Future<T> onFailure(Consumer<Throwable> t) {
+        t.accept(this.exception);
+        return this;
+    }
+
     @Override public boolean isCompleted() {
         return true;
+    }
+
+    @Override public Future<T> filter(Predicate<T> predicate) {
+        return this;
     }
 
     @Override public Future<Throwable> failed() {

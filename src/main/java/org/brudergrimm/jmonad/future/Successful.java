@@ -2,11 +2,16 @@ package org.brudergrimm.jmonad.future;
 
 import org.brudergrimm.jmonad.option.Option;
 import org.brudergrimm.jmonad.option.Some;
+import org.brudergrimm.jmonad.tried.Failure;
 import org.brudergrimm.jmonad.tried.Success;
 import org.brudergrimm.jmonad.tried.Try;
 
+import java.time.Duration;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Successful<T> extends Future<T> {
     private final T result;
@@ -35,8 +40,27 @@ public class Successful<T> extends Future<T> {
         return Some.apply(Success.apply(result));
     }
 
+    @Override public Try<T> await(Duration atMost) {
+        return Success.apply(this.result);
+    }
+
+    @Override public Future<T> onSuccess(Consumer<T> t) {
+        t.accept(this.result);
+        return this;
+    }
+
+    @Override public Future<T> onFailure(Consumer<Throwable> t) {
+        return this;
+    }
+
     @Override public boolean isCompleted() {
         return true;
+    }
+
+    @Override public Future<T> filter(Predicate<T> predicate) {
+            if (predicate.test(this.result)) {
+                return this;
+            } else return Failed.apply(new NoSuchElementException("Predicate didn't match value"));
     }
 
     @Override public Future<Throwable> failed() {

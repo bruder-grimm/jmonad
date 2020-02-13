@@ -51,6 +51,7 @@ String possibleResult = Option.apply(getUserInput())
 
 ```java
 Option<Repository> repository;
+
 /** By creating a function that returns a monad you force the callee to handle either situation
   * No more nullpointers, no more try catch blocks, no more java frustrations */
 public Either<Error, List<Integer>> getIds() {
@@ -82,16 +83,20 @@ Scheduling is taken care of, use them just like the other monads.
 ```java
 Future<Integer> eventual = Future.apply(() -> someExpensiveCalculation());
     .map(someInt -> someInt * 2)
-    .flatMap(x -> someOtherExpensiveCalculation(x));
+    .flatMap(x -> someOtherExpensiveCalculation(x))
+    .filter(y -> y > 20);
+
+eventual.onSuccess(result -> System.out.println("Calculated result " + result));
+
+
+Try<Integer> value = eventual.await(Duration.ofMillis(20));
+
+return value.getOrElse(42);
 ```
 
-Futures still need 
-- onComplete or foreach
-- await
-- filter
-- fold
-- recover
-- recoverWith
+You can await futures with a duration, register callbacks that are going to be executed once they're done, etc.
+
+Everything works like you'd expect it to.
 
 
 ## What to do

@@ -6,8 +6,13 @@ import org.brudergrimm.jmonad.tried.Failure;
 import org.brudergrimm.jmonad.tried.Success;
 import org.brudergrimm.jmonad.tried.Try;
 
+import java.time.Duration;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class DefaultPromise<T> extends Future<T> {
@@ -53,9 +58,35 @@ public class DefaultPromise<T> extends Future<T> {
         );
     }
 
+    @Override public Try<T> await(Duration atMost) {
+        return this.task.flatMap(future ->
+                Try.applyThrowing(() -> future.get(atMost.toMillis(), TimeUnit.MILLISECONDS))
+        );
+    }
+
+    @Override public Future<T> onSuccess(Consumer<T> t) {
+        this.task.map(future -> future.thenAcceptAsync(t));
+        return this;
+    }
+
+    @Override public Future<T> onFailure(Consumer<Throwable> t) {
+        this.task.map(future -> future.handle((i, throwable) -> {
+            t.accept(throwable);
+            return i;
+        }));
+        return this;
+    }
+
     @Override public boolean isCompleted() {
-        // if the task has failed it is inherently done
         return task.map(CompletableFuture::isDone).getOrElse(true);
+    }
+
+    @Override public Future<T> filter(Predicate<T> predicate) {
+        return this.map( r -> {
+            if (predicate.test(r)) {
+                return r;
+            } else throw new NoSuchElementException("Predicate didn't match value");
+        });
     }
 
     @Override public Future<Throwable> failed() {
