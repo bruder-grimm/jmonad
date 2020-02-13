@@ -106,6 +106,13 @@ abstract public class Try<T> implements Serializable {
      *  @return this or the result of the callback */
     public abstract Try<T> recoverWith(Function<Throwable, Try<T>> fn);
 
+    /** Applies fa if this was a failure, applies fb if this was a success
+     *  @param fa the function to apply if this is a failure
+     *  @param fb the function to apply if this is a success
+     *  @param <U> return type
+     *  @return result of either fa or db */
+    public abstract <U> U fold(Function<Throwable, U> fa, Function<T, U> fb);
+
     /** I have not found out how to supply evidence to this so use with caution
      * @return the inner try */
     public <U> Try<U> flatten() {

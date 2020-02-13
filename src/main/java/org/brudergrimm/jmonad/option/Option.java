@@ -56,6 +56,15 @@ public abstract class Option<T> implements Serializable {
         } else return none;
     }
 
+    /** Either supplies by calling ifEmpty or applies fb to the value
+     *  @param ifEmpty function to apply if no value
+     *  @param fb function to apply to the value if present
+     *  @param <U> the return type
+     *  @return the result of either ifEmpty or fb */
+    public <U> U fold(Supplier<U> ifEmpty, Function<T, U> fb) {
+        return isEmpty() ? ifEmpty.get() : fb.apply(this.get());
+    }
+
     /** @return I need not mention to use this with care */
     public T orNull() { return getOrElse(null); }
 

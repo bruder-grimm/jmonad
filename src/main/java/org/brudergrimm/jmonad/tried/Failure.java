@@ -53,6 +53,11 @@ public class Failure<T> extends Try<T> {
         return fn.apply(exception);
     }
 
+    @Override
+    public <U> U fold(Function<Throwable, U> fa, Function<T, U> fb) {
+        return fa.apply(this.exception);
+    }
+
     @Override public Option<T> toOption() { return None.apply(); }
     @Override public Either<Throwable, T> toEither() { return Left.apply(exception); }
 

@@ -31,26 +31,26 @@ public class DefaultPromise<T> extends Future<T> {
     }
 
     @Override public <R> Future<R> map(Function<T, R> f) {
-        if (this.task.isSuccess()) {
-            return fromJavaFuture(this.task.get().thenApplyAsync(f));
-        }
-        return Failed.apply(this.task.failed().get());
+        return this.task.fold(
+                Failed::apply,
+                future -> fromJavaFuture(future.thenApplyAsync(f))
+        );
     }
 
     @Override public <R> Future<R> flatMap(Function<T, Future<R>> f) {
-        if (this.task.isSuccess()) {
-            return fromJavaFuture(task.get().thenComposeAsync(f.andThen(Future::toJavaFuture)));
-        }
-        return Failed.apply(this.task.failed().get());
+        return this.task.fold(
+                Failed::apply,
+                future -> fromJavaFuture(future.thenComposeAsync(f.andThen(Future::toJavaFuture)))
+        );
     }
 
     @Override public Option<Try<T>> value() {
-        if (this.task.isSuccess()) {
-            return Option.apply(this.task.get().getNow(null))
-                    .map(Success::apply);
-        }
-        // we need to rebox here because types
-        return Some.apply(Failure.apply(this.task.failed().get()));
+        return this.task.fold(
+                failure -> Some.apply(Failure.apply(failure)),
+                future -> Option
+                        .apply(future.getNow(null))
+                        .map(Success::apply)
+        );
     }
 
     @Override public boolean isCompleted() {
@@ -59,11 +59,9 @@ public class DefaultPromise<T> extends Future<T> {
     }
 
     @Override public Future<Throwable> failed() {
-        return this.task
-                .toEither()
-                .fold(
-                        (Failed::apply), // alreadyFailed
-                        (notYetFailed -> Failed.apply(new Throwable("Future hasn't failed")))
+        return this.task.fold(
+                        Failed::apply,
+                        notYetFailed -> Failed.apply(new Throwable("Future hasn't failed"))
                 );
     }
 }

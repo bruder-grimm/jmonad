@@ -1,6 +1,9 @@
 package org.brudergrimm.jmonad.future;
 
 import org.brudergrimm.jmonad.option.Option;
+import org.brudergrimm.jmonad.option.Some;
+import org.brudergrimm.jmonad.tried.Failure;
+import org.brudergrimm.jmonad.tried.Success;
 import org.brudergrimm.jmonad.tried.Try;
 
 import java.util.List;
@@ -9,12 +12,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SequencePromise<T> extends Future<List<T>> {
-    private final CompletableFuture<Void> indicator;
+    private final Try<CompletableFuture<Void>> indicator;
     private final List<Future<T>> futures;
 
     SequencePromise(CompletableFuture<Void> indicator, List<Future<T>> futures) {
-        this.indicator = indicator;
-        this.futures = futures;
+        this.indicator = Try.apply(() -> indicator); // might throw completionException
+        this.futures = futures; // wont do that
     }
 
     @Override public CompletableFuture<List<T>> toJavaFuture() {
@@ -22,41 +25,54 @@ public class SequencePromise<T> extends Future<List<T>> {
     }
 
     private List<T> results() {
+        /* we can safely get here because, via the definition of CompleteableFuture.allOf, all of our futures are
+        a) completed
+        b) not completed exceptionally
+        Users have to deal with nulls that futures might return themselves, might be a problem in the future */
+
         return this.futures
                 .parallelStream()
-                .map(Future::value)
-                .filter(Option::isDefined)
-                .map(Option::get)
-                .filter(Try::isSuccess)
-                .map(Try::get)
+                .map(future -> future.value().get().get())
                 .collect(Collectors.toList());
     }
 
     @Override public <R> Future<R> map(Function<List<T>, R> f) {
-        return fromJavaFuture(
-                indicator.thenApplyAsync(i -> f.apply(this.results()))
+        return indicator.fold(
+                Failed::apply,
+                success -> fromJavaFuture(
+                        success.thenApplyAsync(i -> f.apply(this.results()))
+                )
         );
     }
 
     @Override public <R> Future<R> flatMap(Function<List<T>, Future<R>> f) {
-        return fromJavaFuture(
-                indicator.thenComposeAsync(i -> {
-                            Function<List<T>, CompletableFuture<R>> fprime = f.andThen(Future::toJavaFuture);
-                            return fprime.apply(this.results());
-                        }
+        return indicator.fold(
+                Failed::apply,
+                success -> fromJavaFuture(
+                        success.thenComposeAsync(i ->
+                                f.andThen(Future::toJavaFuture).apply(this.results())
+                        )
                 )
         );
     }
 
     @Override public Option<Try<List<T>>> value() {
-        return null;
+        return this.indicator.fold(
+                failure -> Some.apply(Failure.apply(failure)),
+                success -> Option
+                        .apply(this.results())
+                        .map(Success::apply)
+        );
     }
 
     @Override public boolean isCompleted() {
-        return indicator.isDone();
+        return indicator.map(CompletableFuture::isDone).getOrElse(true);
     }
 
     @Override public Future<Throwable> failed() {
-        return null;
+        return this.indicator.fold(
+                Failed::apply,
+                notYetFailed -> Failed.apply(new Throwable("Future didn't fail"))
+        );
     }
 }

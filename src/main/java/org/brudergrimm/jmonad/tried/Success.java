@@ -55,6 +55,10 @@ public class Success<T> extends Try<T> {
     @Override public Try<T> recover(Function<Throwable, T> fn) { return this; }
     @Override public Try<T> recoverWith(Function<Throwable, Try<T>> fn) { return this; }
 
+    @Override public <U> U fold(Function<Throwable, U> fa, Function<T, U> fb) {
+        return fb.apply(this.value);
+    }
+
     @Override public Option<T> toOption() { return Option.apply(this.get()); }
     @Override public Either<Throwable, T> toEither() { return Right.apply(this.get()); }
 
