@@ -70,10 +70,11 @@ public class DefaultPromise<T> extends Future<T> {
     }
 
     @Override public Future<T> onFailure(Consumer<Throwable> t) {
-        this.task.map(future -> future.handle((i, throwable) -> {
-            t.accept(throwable);
-            return i;
-        }));
+        this.task.map(future ->
+                future.whenCompleteAsync((i, throwable) -> {
+                    if (throwable != null) t.accept(throwable);
+                })
+        );
         return this;
     }
 
