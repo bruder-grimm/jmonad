@@ -6,7 +6,9 @@ import java.util.stream.Stream;
 
 public class ListProcessing {
     public static <T> List<T> union(List<T> a, List<T> b) {
-        return Stream.concat(a.stream(), b.stream()).collect(Collectors.toList());
+        return Stream.concat(a.stream(), b.stream())
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public static <T> List<T> intersection(List<T> a, List<T> b) {
