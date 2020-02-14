@@ -65,9 +65,7 @@ abstract public class Try<T> implements Serializable {
      *  @return getBy the underling value */
     public abstract T get();
 
-    /** practically invertes the result to Success(failure) or Failure(Uns
-     *
-     * @return */
+    /** @return practically invertes the result to Success(failure) or Failure(didn't fail) */
     public abstract Try<Throwable> failed();
 
     /** maps a function to the state value
@@ -117,8 +115,12 @@ abstract public class Try<T> implements Serializable {
      * @return the inner try */
     public <U> Try<U> flatten() {
         if (this.isSuccess() && this.get() instanceof Try) {
-            return (Try<U>) this.get();
-        } else return (Try<U>) this;
+            @SuppressWarnings("unchecked") Try<U> flattened = (Try<U>) this.get();
+            return flattened;
+        } else {
+            @SuppressWarnings("unchecked") Try<U> identity = (Try<U>) this;
+            return identity;
+        }
     }
 
     /** @return an Option of this, empty if failure */

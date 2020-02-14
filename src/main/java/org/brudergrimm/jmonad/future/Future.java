@@ -78,17 +78,17 @@ public abstract class Future<T> {
      *  @param <Evidence> type of the inner future
      *  @return the inner future */
     public <Evidence> Future<Evidence> flatten() {
-        Future<Future<Evidence>> toFlatten;
         try {
-            toFlatten = (Future<Future<Evidence>>) this;
+            @SuppressWarnings("unchecked") Future<Future<Evidence>> toFlatten = (Future<Future<Evidence>>) this;
+            return fromJavaFuture(
+                    toFlatten.map(Future::toJavaFuture)
+                            .toJavaFuture()
+                            .thenCompose(identity())
+            );
         } catch (ClassCastException e) {
-            return (Future<Evidence>) this;
+            @SuppressWarnings("unchecked") Future<Evidence> identity = (Future<Evidence>) this;
+            return identity;
         }
-        return fromJavaFuture(
-                toFlatten.map(Future::toJavaFuture)
-                        .toJavaFuture()
-                        .thenCompose(identity())
-        );
     }
 
     /** @return Either the acutaly completionexception or an error if the future didn't fail */

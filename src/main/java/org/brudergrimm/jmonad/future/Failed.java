@@ -22,19 +22,19 @@ public class Failed<T> extends Future<T> {
         return new Failed<>(throwable);
     }
 
-    @Override public CompletableFuture toJavaFuture() {
-        return CompletableFuture.completedFuture(this.exception);
+    @Override public CompletableFuture<T> toJavaFuture() {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(this.exception);
+        return future;
     }
 
     @Override public <R> Future<R> map(Function<T, R> f) {
-        @SuppressWarnings("unchecked")
-        Future<R> failed = (Future<R>) this;
+        @SuppressWarnings("unchecked") Future<R> failed = (Future<R>) this;
         return failed;
     }
 
     @Override public <R> Future<R> flatMap(Function<T, Future<R>> f) {
-        @SuppressWarnings("unchecked")
-        Future<R> failed = (Future<R>) this;
+        @SuppressWarnings("unchecked") Future<R> failed = (Future<R>) this;
         return failed;
     }
 

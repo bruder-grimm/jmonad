@@ -26,12 +26,15 @@ public class DefaultPromise<T> extends Future<T> {
         this.task = Try.apply(() -> javaFuture);
     }
 
-    @Override public CompletableFuture toJavaFuture() {
+    @Override public CompletableFuture<T> toJavaFuture() {
         return this.task
-                .toEither() // the combination of toEither with fold is basically 'transform'
                 .fold(
-                        (CompletableFuture::completedFuture), // alreadyFailed
-                        (notYetFailed -> notYetFailed)
+                        i -> { // either let a java future fail with our exception or
+                            CompletableFuture<T> future = new CompletableFuture<>();
+                            future.completeExceptionally(i);
+                            return future;
+                        },
+                        Function.identity() // just return the underlying java future
                 );
     }
 
@@ -92,8 +95,8 @@ public class DefaultPromise<T> extends Future<T> {
 
     @Override public Future<Throwable> failed() {
         return this.task.fold(
-                        Failed::apply,
-                        notYetFailed -> Failed.apply(new Throwable("Future hasn't failed"))
+                        Successful::apply,
+                        i -> Failed.apply(new Throwable("Future hasn't failed"))
                 );
     }
 }

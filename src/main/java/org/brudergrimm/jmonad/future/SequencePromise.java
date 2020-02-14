@@ -7,7 +7,10 @@ import org.brudergrimm.jmonad.tried.Success;
 import org.brudergrimm.jmonad.tried.Try;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -25,15 +28,21 @@ public class SequencePromise<T> extends Future<List<T>> {
     }
 
     @Override public CompletableFuture<List<T>> toJavaFuture() {
-        return null;
+        return CompletableFuture.supplyAsync(() -> indicator
+                .map(future -> {
+                    future.join(); // await the indicator in another thread
+                    return futures.stream() // then collect all of our futures
+                            .map(v -> v.value().get().get())
+                            .collect(Collectors.toList());
+                }).getOrElse(Collections.emptyList())
+        );
     }
 
     private List<T> results() {
-        /* we can safely get here because, via the definition of CompleteableFuture.allOf, all of our futures are
+        /* we can safely get here because - via the definition of CompletableFuture.allOf - all of our futures are
         a) completed
         b) not completed exceptionally
         Users have to deal with nulls that futures might return themselves, might be a problem in the future */
-
         return this.futures
                 .parallelStream()
                 .map(future -> future.value().get().get())
@@ -78,29 +87,39 @@ public class SequencePromise<T> extends Future<List<T>> {
     }
 
     @Override public Future<List<T>> onSuccess(Consumer<List<T>> t) {
-        this.indicator.map(future -> future.thenRunAsync(() -> t.accept(this.results())));
+        this.indicator.map(future ->
+                future.thenRunAsync(() -> t.accept(this.results()))
+        );
         return this;
     }
 
     @Override public Future<List<T>> onFailure(Consumer<Throwable> t) {
-        this.indicator.map(future -> future.whenCompleteAsync((i, throwable) -> {
-            if (throwable != null) t.accept(throwable);
-        }));
+        this.indicator.map(future ->
+                future.whenCompleteAsync((i, throwable) -> {
+                    if (throwable != null) t.accept(throwable);
+                })
+        );
         return this;
     }
 
     @Override public boolean isCompleted() {
-        return indicator.map(CompletableFuture::isDone).getOrElse(true);
+        return indicator
+                .map(CompletableFuture::isDone)
+                .getOrElse(true);
     }
 
     @Override public Future<List<T>> filter(Predicate<List<T>> predicate) {
-        return null;
+        return this.map( r -> {
+            if (predicate.test(r)) {
+                return r;
+            } else throw new NoSuchElementException("Predicate didn't match value");
+        });
     }
 
     @Override public Future<Throwable> failed() {
         return this.indicator.fold(
-                Failed::apply,
-                notYetFailed -> Failed.apply(new Throwable("Future didn't fail"))
+                Successful::apply,
+                i -> Failed.apply(new Throwable("Future didn't fail"))
         );
     }
 }
