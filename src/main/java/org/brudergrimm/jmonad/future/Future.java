@@ -4,6 +4,7 @@ import org.brudergrimm.jmonad.option.Option;
 import org.brudergrimm.jmonad.tried.Try;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -98,13 +99,15 @@ public abstract class Future<T> {
      *  @param futures the list of futures
      *  @param <T> type of whatever is in the list
      *  @return the eventual list */
-    public static <T> Future<List<T>> sequence(List<Future<T>> futures) {
+    @SafeVarargs
+    public static <T> Future<List<T>> sequence(Future<T>... futures) {
+        List<Future<T>> allFutures = Arrays.asList(futures);
         CompletableFuture<Void> indicator = CompletableFuture.allOf(
-                futures.parallelStream()
+                allFutures.parallelStream()
                         .map(Future::toJavaFuture)
                         .toArray(CompletableFuture[]::new)
         );
 
-        return new SequencePromise<>(indicator, futures);
+        return new SequencePromise<>(indicator, allFutures);
     }
 }

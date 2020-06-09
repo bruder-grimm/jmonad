@@ -96,6 +96,24 @@ return value.getOrElse(42);
 
 You can await futures with a duration, register callbacks that are going to be executed once they're done, etc.
 
+You can also create boxing future containing any amount of futures that are all executed in paralell.
+The boxing future will be finished once all enclosed futures are done.
+
+Invoke it like  
+```java
+Future<List<SomeModel>> eventualModels = Future.sequence(
+    Future.apply(() -> querySomeService(1)),
+    Future.apply(() -> querySomeService(2)),
+    Future.apply(() -> querySomeService(3))
+)
+
+// use it just like the other futures, but map and flatmap functions that act on a list of results
+Function<List<SomeModel>, String> getInfoForAllModels = SomeInfoProvider::returnsAnoterFuture
+Future<String> eventualStringInfoForAllModels = eventualModels.flatMap(getInfoForAllModels)
+
+eventualStringInfoForAllModels.onSuccess(result -> System.out.println("Got all the info: " + result));
+```
+
 Everything works like you'd expect it to.
 
 
