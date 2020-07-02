@@ -108,7 +108,7 @@ Future<List<SomeModel>> eventualModels = Future.sequence(
 )
 
 // use it just like the other futures, but map and flatmap functions that act on a list of results
-Function<List<SomeModel>, String> getInfoForAllModels = SomeInfoProvider::returnsAnoterFuture
+Function<List<SomeModel>, Future<String>> getInfoForAllModels = SomeInfoProvider::returnsAnoterFuture
 Future<String> eventualStringInfoForAllModels = eventualModels.flatMap(getInfoForAllModels)
 
 eventualStringInfoForAllModels.onSuccess(result -> System.out.println("Got all the info: " + result));
